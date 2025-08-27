@@ -1,0 +1,20 @@
+{
+"name": "projet",
+"version": "1.0.0",
+"description": "Electron + Tailwind desktop app for transfer function parsing",
+"main": "main.js",
+"license": "MIT",
+"scripts": {
+"electron": "electron .",
+"tailwind": "tailwindcss -i ./src/styles/tailwind.css -o ./src/styles/output.css --watch",
+"dev": "concurrently \"npm:tailwind\" \"npm:electron\"",
+"build:css": "tailwindcss -i ./src/styles/tailwind.css -o ./src/styles/output.css"
+},
+"devDependencies": {
+"autoprefixer": "^10.4.19",
+"concurrently": "^9.1.0",
+"electron": "^32.2.0",
+"postcss": "^8.4.47",
+"tailwindcss": "^3.4.10"
+}
+}

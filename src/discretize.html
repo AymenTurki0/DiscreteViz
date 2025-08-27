@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Représentation Discrète</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .matrix-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+        .matrix {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        .matrix-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #93c5fd;
+        }
+    </style>
+</head>
+<body class="text-slate-100">
+    <div class="max-w-5xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold gradient-text mb-2">Représentation Discrète</h1>
+            <p class="text-slate-400">Analyse des systèmes discrets</p>
+        </header>
+
+        <div class="glass rounded-xl p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Fonction de Transfert</h2>
+            <div id="tfDisplay" class="p-4 bg-slate-800/50 rounded-lg mb-2 text-center text-lg"></div>
+        </div>
+
+        <div class="glass rounded-xl p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Équation aux Différences</h2>
+            <div id="recurrentDisplay" class="p-4 bg-slate-800/50 rounded-lg"></div>
+        </div>
+
+        <div class="glass rounded-xl p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Représentation d'État</h2>
+            <div id="stateSpaceDisplay" class="p-4 bg-slate-800/50 rounded-lg">
+                <div class="matrix-container" id="matricesContainer"></div>
+            </div>
+        </div>
+
+        <div class="glass rounded-xl p-6">
+            <h2 class="text-xl font-semibold mb-4">Choisir l'Entrée</h2>
+            <form id="inputForm">
+                <select id="inputSelect" class="w-full p-3 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 mb-4">
+                    <option value="step">Échelon</option>
+                    <option value="ramp">Rampe</option>
+                    <option value="impulse">Impulsion (Dirac)</option>
+                    <option value="sinus">Sinusoïde</option>
+					<option value="noisy_step">noisy Échelon</option>
+					<option value="noisy_ramp">noisy rampe</option>
+					<option value="custom">Entrée personnalisée</option> <!-- new option -->
+                </select>
+                <input 
+    type="text" 
+    id="customInputZ" 
+    placeholder="Ex: z/(z-0.9)" 
+    class="w-full p-3 rounded-lg bg-slate-800 border border-slate-700 text-slate-100 mb-4 hidden"
+/>
+                <button type="submit" class="w-full py-3 px-4 rounded-lg bg-indigo-600 hover:bg-indigo-700 font-semibold">
+                    Visualiser la réponse
+                </button>
+            </form>
+        </div>
+    </div>
+
+<script>
+    // Récupération des données depuis le localStorage
+    const tfData = JSON.parse(localStorage.getItem('tf'));
+
+    if (!tfData) {
+        setTimeout(() => window.location.href = 'input.html', 2000);
+    } else {
+        // Affichage de la fonction de transfert
+        document.getElementById("tfDisplay").innerHTML = `$$ ${tfData.raw.replace('G(z) = ', '')} $$`;
+
+        // Fonction utilitaire pour parser un polynôme
+        function parsePolynomial(polyStr) {
+            const cleanStr = polyStr.replace(/\s+/g, '');
+            const terms = cleanStr.split(/(?=[+-])/);
+            let maxDegree = 0;
+
+            // Trouver le degré maximum
+            for (const term of terms) {
+                if (term.includes('z^')) maxDegree = Math.max(maxDegree, parseInt(term.split('z^')[1]));
+                else if (term.includes('z')) maxDegree = Math.max(maxDegree, 1);
+            }
+
+            const coefficients = Array(maxDegree + 1).fill(0);
+
+            for (const term of terms) {
+                if (term === '') continue;
+                let coeff, degree;
+
+                if (term.includes('z^')) {
+                    const parts = term.split('z^');
+                    coeff = parts[0] === '' || parts[0] === '+' ? 1 : parts[0] === '-' ? -1 : parseFloat(parts[0]);
+                    degree = parseInt(parts[1]);
+                } else if (term.includes('z')) {
+                    const parts = term.split('z');
+                    coeff = parts[0] === '' || parts[0] === '+' ? 1 : parts[0] === '-' ? -1 : parseFloat(parts[0]);
+                    degree = 1;
+                } else {
+                    coeff = parseFloat(term);
+                    degree = 0;
+                }
+
+                coefficients[maxDegree - degree] = coeff;
+            }
+
+            return coefficients;
+        }
+
+        try {
+            const numCoeffs = parsePolynomial(tfData.numerator);
+            const denCoeffs = parsePolynomial(tfData.denominator);
+
+            // Équation récurrente
+            const n = denCoeffs.length - 1;
+            let equation = "y[k] = ";
+            const terms = [];
+
+            for (let i = 1; i <= n; i++) {
+                if (denCoeffs[i] !== 0) {
+                    terms.push(`${denCoeffs[i] > 0 ? '-' : '+'} ${Math.abs(denCoeffs[i])}y[k-${i}]`);
+                }
+            }
+            for (let i = 0; i < numCoeffs.length; i++) {
+                if (numCoeffs[i] !== 0) {
+                    terms.push(`${numCoeffs[i] > 0 ? '+' : '-'} ${Math.abs(numCoeffs[i])}u[k-${i}]`);
+                }
+            }
+            equation += terms.join(' ');
+            document.getElementById("recurrentDisplay").textContent = equation;
+
+            // Matrices d'état (canonique de commande)
+            const A = Array.from({ length: n }, (_, i) => {
+                const row = Array(n).fill(0);
+                if (i < n - 1) row[i + 1] = 1;
+                else row.forEach((_, j) => row[j] = -denCoeffs[j + 1] || 0);
+                return row;
+            });
+
+            const B = Array(n).fill(0);
+            B[n - 1] = 1;
+
+            const C = Array(n).fill(0);
+            for (let i = 0; i < n; i++) {
+                if (i < numCoeffs.length - 1) {
+                    C[i] = numCoeffs[i + 1] - (numCoeffs[0] || 0) * (denCoeffs[i + 1] || 0);
+                }
+            }
+
+            const D = numCoeffs[0] || 0;
+
+            // Fonction pour formater un nombre proprement
+            const formatNum = x => {
+                if (Math.abs(x) < 1e-10) return '0';
+                return Number.isInteger(x) ? x.toString() : x.toFixed(4).replace(/\.?0+$/, '');
+            };
+
+            // Fonction pour formater une matrice en LaTeX
+            function formatMatrix(matrix, name) {
+                let latex = '';
+                if (Array.isArray(matrix[0])) {
+                    latex = '\\begin{bmatrix}';
+                    for (let i = 0; i < matrix.length; i++) {
+                        for (let j = 0; j < matrix[i].length; j++) {
+                            latex += formatNum(matrix[i][j]);
+                            if (j < matrix[i].length - 1) latex += ' & ';
+                        }
+                        if (i < matrix.length - 1) latex += ' \\\\ ';
+                    }
+                    latex += '\\end{bmatrix}';
+                } else {
+                    latex = '\\begin{bmatrix}';
+                    for (let i = 0; i < matrix.length; i++) {
+                        latex += formatNum(matrix[i]);
+                        if (i < matrix.length - 1) latex += ' \\\\ ';
+                    }
+                    latex += '\\end{bmatrix}';
+                }
+                return `<div class="matrix">
+                            <div class="matrix-title">${name}</div>
+                            <div>$$ ${name} = ${latex} $$</div>
+                        </div>`;
+            }
+
+            const container = document.getElementById("matricesContainer");
+            container.innerHTML = `
+                <div class="w-full text-center mb-4">Le système est d'ordre ${n}.</div>
+                ${formatMatrix(A, 'A')}
+                ${formatMatrix(B, 'B')}
+                ${formatMatrix(C, 'C')}
+                <div class="matrix">
+                    <div class="matrix-title">D</div>
+                    <div>$$ D = ${formatNum(D)} $$</div>
+                </div>
+                <div class="w-full mt-4 text-center">
+                    <div>Équations d'état:</div>
+                    <div>$$ x[k+1] = A x[k] + B u[k] $$</div>
+                    <div>$$ y[k] = C x[k] + D u[k] $$</div>
+                </div>
+            `;
+
+        } catch (err) {
+            console.error('Erreur:', err);
+            document.getElementById("recurrentDisplay").textContent =
+                "Impossible de générer l'équation récurrente.";
+            document.getElementById("stateSpaceDisplay").textContent =
+                "Impossible de générer la représentation d'état.";
+        }
+
+        // Rendu KaTeX
+        setTimeout(() => {
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+        }, 100);
+    }
+
+    // Gestion du formulaire
+    document.getElementById('inputForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const inputType = document.getElementById('inputSelect').value;
+        localStorage.setItem('inputType', inputType);
+        window.location.href = 'output.html';
+    });
+</script>
+</body>
+</html>

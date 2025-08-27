@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulation Discrète</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body);"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-900 text-slate-100">
+
+<main class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+
+  <h1 class="text-3xl font-extrabold gradient-text text-center">Simulation Système Discret</h1>
+
+  <section class="glass rounded-2xl p-5 shadow-md space-y-3">
+    <h2 class="text-lg font-semibold">Paramètres de simulation</h2>
+    <div class="flex space-x-3">
+      <label class="flex flex-col">
+        Nombre de points :
+        <input type="number" id="numPoints" value="200" min="10" max="500" class="p-2 rounded-md bg-slate-800 text-slate-100">
+      </label>
+      <button id="simulateBtn" class="py-2 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold">Simuler</button>
+    </div>
+    <div>
+      Entrée choisie: <span id="inputName" class="font-semibold"></span>
+    </div>
+  </section>
+
+  <section class="glass rounded-2xl p-5 shadow-md space-y-3">
+    <h2 class="text-lg font-semibold">Courbes de sortie</h2>
+    <canvas id="chartOutput"></canvas>
+  </section>
+
+  <section class="glass rounded-2xl p-5 shadow-md space-y-3">
+    <h2 class="text-lg font-semibold">Sortie modélisée (ARMA)</h2>
+    <canvas id="chartModel"></canvas>
+    <div id="armaEq" class="p-3 bg-slate-800/70 rounded-lg text-base leading-normal mt-3"></div>
+    <div id="tfz" class="p-3 bg-slate-800/70 rounded-lg text-base leading-normal mt-3"></div>
+    <div id="tfs" class="p-3 bg-slate-800/70 rounded-lg text-base leading-normal mt-3"></div>
+  </section>
+<!-- LQC Button -->
+<div class="flex justify-center mt-6">
+  <button 
+    id="lqcBtn"
+    class="py-2 px-6 rounded-xl bg-green-600 hover:bg-green-500 font-semibold text-white"
+  >
+    Régulation LQC du système
+  </button>
+</div>
+</main>
+
+<script src="./js/outputv2.js" defer></script>
+
+</body>
+</html>
