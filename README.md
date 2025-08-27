@@ -4,7 +4,7 @@
 
 Ever wondered how your digital control system behaves? DiscreteStudio makes it easy to visualize and understand discrete systems without complicated software or expensive tools.
 
-![Transfer Function Input](image2.png)
+![Transfer Function Input](image2.PNG)
 
 ## What does it do?
 
