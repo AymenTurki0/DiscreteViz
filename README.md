@@ -4,7 +4,7 @@
 
 Ever wondered how your digital control system behaves? DiscreteStudio makes it easy to visualize and understand discrete systems without complicated software or expensive tools.
 
-![Transfer Function Input](img2.PNG)
+![Transfer Function Input](img1.PNG)
 
 ## What does it do?
 
@@ -15,7 +15,7 @@ Think of it as a digital playground for engineers and students. You input a math
 - Real-time simulations you can interact with
 - Beautiful charts that actually make sense
 
-![System Response](image1.png)
+![System Response](img0.PNG)
 
 ## Why I built this
 
@@ -31,7 +31,7 @@ So I built DiscreteStudio - one simple web app that does everything you need for
 ### 🎯 **Transfer Function Analyzer**
 Just type in your G(z) equation and hit analyze. The app figures out the rest.
 
-![State Space](image3.png)
+![State Space](img2.PNG)
 
 ### 📊 **Smart Visualization**
 - See your system's step response instantly
@@ -46,7 +46,7 @@ Choose your input signal and watch your system respond in real-time:
 - Sine waves
 - Even noisy signals!
 
-![Input Types](image4.png)
+![Input Types](img3.PNG)
 
 ### 🔢 **Automatic Calculations**
 The app automatically converts your transfer function into:
@@ -54,7 +54,7 @@ The app automatically converts your transfer function into:
 - State-space representations
 - All the matrices you need
 
-![Live Simulation](image5.png)
+![Live Simulation](img4.PNG)
 
 ## How to use it
 
